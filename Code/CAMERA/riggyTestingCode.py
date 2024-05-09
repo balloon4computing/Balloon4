@@ -32,5 +32,5 @@ camera = CAMERA()  # Create a camera controller instance with defaults
 camera.run(mode='video', width=2560, height=1440, duration=10000, fps=24, loop=False)
 
 # Video 1920 x 1080p, 24 fps
-#camera.run(mode='video', width=1920, height=1080, duration=10000, fps=24, loop=False)
+# camera.run(mode='video', width=1920, height=1080, duration=10000, fps=24, loop=False)
 
