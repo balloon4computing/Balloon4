@@ -6,7 +6,7 @@ tubeCounts = 0
 currentTime = 0
 setTime = 0
 countPerMinute = 0
-usvh_ratio = 0.00332 # This is for the J305 tube
+usvh_ratio = 0.00332  # This is for the J305 tube
 
 # Pin configuration
 GEIGER_PIN = 17  # Assuming you're using GPIO4 for the Geiger counter; adjust as necessary
@@ -32,22 +32,26 @@ def setup():
     currentTime = 0
 
 # Loop code equivalent
-def loop():
+def loop(log_file):
     global currentTime, tubeCounts
     startTime = time.time()  # Record start time
     while time.time() - startTime <= 60:  # Run loop for 60 seconds
         pass  # Wait for impulses to be counted in the background
-    print("cpm: ", tubeCounts)
-    print("uSv/h: ",tubeCounts * usvh_ratio)  # After 60 seconds, print the tubeCounts
+    currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    cpm = tubeCounts
+    usvh = tubeCounts * usvh_ratio
+    print(f"Time: {currentTime}, cpm: {cpm}, uSv/h: {usvh}")
+    log_file.write(f"{currentTime}, {cpm}, {usvh}\n")
     tubeCounts = 0  # Reset tubeCounts for the next minute
 
 if __name__ == '__main__':
     try:
         setup()
-        while True:
-            loop()
+        with open("geiger_log.csv", "a") as log_file:
+            log_file.write("Time, CPM, uSv/h\n")
+            while True:
+                loop(log_file)
     except KeyboardInterrupt:
         print("Program stopped by user")
     finally:
         GPIO.cleanup()  # Clean up GPIO to ensure no pins are left high
-
