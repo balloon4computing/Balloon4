@@ -73,14 +73,18 @@ class CAMERA:
         width = width if width is not None else self.default_width
         height = height if height is not None else self.default_height
         fps = fps if fps is not None else self.default_fps
+        count = 0
+        cycle = 2
 
         try:
             while True:
+                if count > cycle:
+                    break
                 if mode == 'timelapse':
                     self.capture_timelapse(width, height, duration, interval, fps)
                 elif mode == 'video':
                     self.capture_video(width, height, duration, fps)
-                
+                    count = count + 1
                 if not loop:
                     break
                 time.sleep(sleep_time)  # Rest before starting the next session

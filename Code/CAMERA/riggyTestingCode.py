@@ -34,16 +34,16 @@ camera = CAMERA()  # Create a camera controller instance with defaults
 # Video 1920 x 1080p, 24 fps
 
 # Change Amount of loops
-count = 0
-cycles = 2
+# count = 0
+# cycles = 2
 
 # time in minutes
 minutes = 0.5
 
 milliseconds = minutes * 60000
 
-while(count < cycles):
-    count = count + 1
-    camera.run(mode='video', width=1920, height=1080, duration=milliseconds, fps=24, loop=False)
+# while(count < cycles):
+    # count = count + 1
+camera.run(mode='video', width=1920, height=1080, duration=milliseconds, fps=24, loop=False)
 
 
