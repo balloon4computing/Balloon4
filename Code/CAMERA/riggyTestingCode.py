@@ -40,7 +40,7 @@ camera = CAMERA()  # Create a camera controller instance with defaults
 # time in minutes
 minutes = 0.5
 
-milliseconds = minutes * 60000
+milliseconds = int(minutes * 60000)
 
 # while(count < cycles):
     # count = count + 1
