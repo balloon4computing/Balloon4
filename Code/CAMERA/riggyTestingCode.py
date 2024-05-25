@@ -44,6 +44,6 @@ milliseconds = int(minutes * 60000)
 
 # while(count < cycles):
     # count = count + 1
-camera.run(mode='video', width=1920, height=1080, duration=milliseconds, fps=24, loop=False)
+camera.run(mode='video', width=1920, height=1080, duration=milliseconds, fps=24, loop=True)
 
 
