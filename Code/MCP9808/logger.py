@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Add the directory containing your module to sys.path
+module_path = '/home/jumiknows/.local/lib/python3.9/site-packages'
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
 import board
 import busio
 import adafruit_mcp9808
@@ -11,7 +19,7 @@ i2c = busio.I2C(board.SCL, board.SDA)
 mcp = adafruit_mcp9808.MCP9808(i2c)
 
 # Open a CSV file in write mode
-with open('temperature_readings.csv', mode='w', newline='') as file:
+with open('/home/jumiknows/Balloon4/Code/MCP9808/temperature_readings.csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     
     # Write the header row
@@ -21,7 +29,7 @@ with open('temperature_readings.csv', mode='w', newline='') as file:
     while True:
         # Get current timestamp
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        
+        file.flush()
         # Get temperature reading
         temperature = mcp.temperature
         
