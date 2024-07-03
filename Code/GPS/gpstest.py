@@ -14,10 +14,10 @@ uart = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=10)
 gps = adafruit_gps.GPS(uart)
 
 with open(LOG_FILE, LOG_MODE) as outfile:
-	while True:
-    	sentence = gps.readline()
-    	if not sentence:
-        	continue
-    	print(str(sentence,"ascii").strip())
-    	outfile.write(sentence)
-    	outfile.flush()
+    while True:
+        sentence = gps.readline()
+        if not sentence:
+            continue
+        print(str(sentence,"ascii").strip())
+        outfile.write(sentence)
+        outfile.flush()
