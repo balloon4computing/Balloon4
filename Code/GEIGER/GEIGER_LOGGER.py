@@ -47,8 +47,9 @@ def loop(log_file):
 if __name__ == '__main__':
     try:
         setup()
-        with open("geiger_log.csv", "a") as log_file:
+        with open("/home/jumiknows/Balloon4/Code/GEIGER/geiger_log.csv", "a+", newline='') as log_file:
             log_file.write("Time, CPM, uSv/h\n")
+            log_file.flush()
             while True:
                 loop(log_file)
     except KeyboardInterrupt:
