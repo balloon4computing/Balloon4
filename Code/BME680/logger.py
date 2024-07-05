@@ -15,7 +15,7 @@ with open('/home/jumiknows/Balloon4/Code/BME680/sensor_readings.csv', mode='w', 
     writer = csv.writer(file)
 
     # Write the header row
-    writer.writerow(['Timestamp', 'Temperature (C)', 'Pressure (hPa)'])
+    writer.writerow(['Timestamp', 'Temperature (C)', 'Pressure (hPa)', 'Humidity (RH)'])
 
     # Main loop to read and log sensor data
     while True:
@@ -25,14 +25,16 @@ with open('/home/jumiknows/Balloon4/Code/BME680/sensor_readings.csv', mode='w', 
         # Read temperature and pressure
         temperature = sensor.temperature
         pressure = sensor.pressure
+        humidity = sensor.humidity
 
         # Write data to CSV file
-        writer.writerow([timestamp, temperature, pressure])
+        writer.writerow([timestamp, temperature, pressure, humidity])
         file.flush()
         # Print the sensor readings
         print(f"Timestamp: {timestamp}")
         print(f"Temperature: {temperature:.2f} C")
         print(f"Pressure: {pressure:.2f} hPa")
+        print(f"Humidity: {humidity:.2f} HV")
 
         # Wait for 1 second before taking the next reading
         time.sleep(1)
