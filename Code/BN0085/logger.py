@@ -15,7 +15,7 @@ bno.enable_feature(BNO_REPORT_MAGNETOMETER)
 
 
 # Open a CSV file in write mode
-with open('/home/jumiknows/Balloon4/Code/BN0085/sensor_readings.csv', mode='w', newline='') as file:
+with open('/home/jumiknows/Balloon4/Code/BN0085/sensor_readings.csv', mode='a+', newline='') as file:
     writer = csv.writer(file)
 
     # Write the header row

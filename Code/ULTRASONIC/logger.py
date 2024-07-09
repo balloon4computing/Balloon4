@@ -10,13 +10,13 @@ GPIO.setmode(GPIO.BCM)
 delayTime = 0.2 #arbitrary time
 
 # setup trigger and echo pins
-trigPin = 23 # pin 23
-echoPin = 24 # pin 24
+trigPin = 12 # pin 23
+echoPin = 13 # pin 24
 GPIO.setup(trigPin, GPIO.OUT)
 GPIO.setup(echoPin, GPIO.IN)
 
 # Open a CSV file in write mode
-with open('/home/jumiknows/justin_stuff/sensor_readings.csv', mode='w', newline='') as file:
+with open('/home/jumiknows/Balloon4/Code/ULTRASONIC/sensor_readings.csv', mode='a+', newline='') as file:
     writer = csv.writer(file)
 
 # Write the header row
