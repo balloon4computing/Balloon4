@@ -240,6 +240,38 @@ def log_gps():
             print(f"Error logging GPS data: {e}")
             time.sleep(5)  # Wait before retrying
 
+def read_csv_files():
+    file_paths = [
+        temperature_file_path,
+        sensor_file_path,
+        pressure_file_path,
+        geiger_file_path,
+        ultrasonic_file_path,
+        gps_file_path
+    ]
+    file_locks = [
+        temperature_lock,
+        sensor_lock,
+        pressure_lock,
+        geiger_lock,
+        ultrasonic_lock,
+        gps_lock
+    ]
+    
+    while True:
+        try:
+            for file_path, file_lock in zip(file_paths, file_locks):
+                with file_lock:
+                    with open(file_path, mode='r', newline='') as file:
+                        reader = csv.reader(file)
+                        rows = list(reader)
+                        if rows:
+                            print(f"Last entry in {file_path}: {rows[-1]}")
+            time.sleep(10)  # Read every 10 seconds
+        except Exception as e:
+            print(f"Error reading CSV files: {e}")
+            time.sleep(5)  # Wait before retrying
+
 # Initialize CSV files with headers if not already done
 def initialize_files():
     with temperature_lock:
@@ -288,6 +320,7 @@ if __name__ == "__main__":
     geiger_thread = threading.Thread(target=log_geiger)
     ultrasonic_thread = threading.Thread(target=log_ultrasonic)
     gps_thread = threading.Thread(target=log_gps)
+    read_thread = threading.Thread(target=read_csv_files)
 
     # Start the threads
     temperature_thread.start()
@@ -296,6 +329,7 @@ if __name__ == "__main__":
     geiger_thread.start()
     ultrasonic_thread.start()
     gps_thread.start()
+    read_thread.start()
 
     # Join the threads to keep the script running
     temperature_thread.join()
@@ -304,3 +338,4 @@ if __name__ == "__main__":
     geiger_thread.join()
     ultrasonic_thread.join()
     gps_thread.join()
+    read_thread.join()
