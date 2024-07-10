@@ -29,12 +29,12 @@ if __name__ == '__main__':
 
       tubeCounts = 0
       currentTime = 0
-      with open("/home/jumiknows/Balloon4/Code/GEIGER/geiger_log.csv", "a+", newline='') as log_file:
+      with open("/home/jumiknows/Balloon4/Code/GEIGER/geiger_log_sec.csv", "a+", newline='') as log_file:
           writer = csv.writer(log_file)
           writer.writerow(["Time", "CPM", "uSv/h"])
           while True:
               startTime = time.time()  # Record start time
-              while time.time() - startTime <= 60:  # Run loop for 60 seconds
+              while time.time() - startTime <= 1:  # Run loop for 60 seconds
                   pass  # Wait for impulses to be counted in the background
               currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
               cpm = tubeCounts

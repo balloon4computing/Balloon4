@@ -172,17 +172,17 @@ def log_geiger():
     while True:
         try:
             startTime = time.time()
-            while time.time() - startTime <= 60:
+            while time.time() - startTime <= 1:
                 pass
             currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            cpm = tubeCounts
+            cps = tubeCounts
             usvh = tubeCounts * usvh_ratio
             with geiger_lock:
                 with open(geiger_file_path, mode='a', newline='') as file:
                     writer = csv.writer(file)
-                    writer.writerow([currentTime, cpm, usvh])
+                    writer.writerow([currentTime, cps, usvh])
                     file.flush()
-            print(f"Geiger - Time: {currentTime}, CPM: {cpm}, uSv/h: {usvh}")
+            print(f"Geiger - Time: {currentTime}, CPS: {cps}, uSv/h: {usvh}")
             tubeCounts = 0
         except Exception as e:
             print(f"Error logging Geiger counter: {e}")
@@ -296,7 +296,7 @@ def initialize_files():
         if not os.path.exists(geiger_file_path):
             with open(geiger_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["Time", "CPM", "uSv/h"])
+                writer.writerow(["Time", "CPS", "uSv/h"])
 
     with ultrasonic_lock:
         if not os.path.exists(ultrasonic_file_path):

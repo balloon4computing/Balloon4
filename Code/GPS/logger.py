@@ -14,10 +14,10 @@ gps.send_command(b'PMTK314,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1')
 gps.send_command(b'PMTK220,1000')
 
 # Open a CSV file in write mode with the specified path
-csv_file_path = '/home/jumiknows/Balloon4/Code/GPS/sensor_readings.csv'
+csv_file_path = '/home/jumiknows/Balloon4/Code/GPS/sensor_readings2.csv'
 with open(csv_file_path, mode='a+', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Timestamp', 'Latitude', 'Longitude'])  # Write header
+    writer.writerow(['Timestamp', 'Latitude', 'Longitude', 'Velocity'])  # Write header
 
     try:
         print("Writing GPS data to '{}'".format(csv_file_path))
@@ -30,8 +30,9 @@ with open(csv_file_path, mode='a+', newline='') as file:
                 current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 latitude = gps.latitude
                 longitude = gps.longitude
-                print(f"Time: {current_time}, Lat: {latitude}, Long: {longitude}")
-                writer.writerow([current_time, latitude, longitude])
+                velocity = gps.speed_knots
+                print(f"Time: {current_time}, Lat: {latitude}, Long: {longitude}, Velocity: {velocity}")
+                writer.writerow([current_time, latitude, longitude, velocity])
                 file.flush()  # Flush data to file immediately after writing
             else:
                 print("Waiting for fix...")
