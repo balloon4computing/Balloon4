@@ -42,7 +42,7 @@ class CAMERA:
             fps (int): The frames per second rate of the video recording.
         """
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"video-{timestamp}.h264"
+        filename = f"/home/jumiknows/Balloon4/Code/CAMERA/video-{timestamp}.h264"
 
         command = [
             "libcamera-vid",
@@ -74,7 +74,7 @@ class CAMERA:
         height = height if height is not None else self.default_height
         fps = fps if fps is not None else self.default_fps
         count = 0
-        cycle = 2
+        cycle = 12
 
         try:
             while True:

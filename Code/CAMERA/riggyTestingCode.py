@@ -38,7 +38,7 @@ camera = CAMERA()  # Create a camera controller instance with defaults
 # cycles = 2
 
 # time in minutes
-minutes = 0.5
+minutes = 10
 
 milliseconds = int(minutes * 60000)
 
