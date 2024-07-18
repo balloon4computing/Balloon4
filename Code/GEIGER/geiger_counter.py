@@ -33,7 +33,8 @@ class GeigerCounter:
                     pass
                 currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 cps = self.tubeCounts
-                usvh = self.tubeCounts * self.usvh_ratio
+                # 60 to change from cps to cpm
+                usvh = self.tubeCounts * 60 * self.usvh_ratio
                 with geiger_lock:
                     with open(geiger_file_path, mode='a', newline='') as file:
                         writer = csv.writer(file)
