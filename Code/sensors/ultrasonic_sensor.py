@@ -4,11 +4,16 @@ from sensors.sensor_base import Sensor
 
 class UltrasonicSensor(Sensor):
     def __init__(self, pause_event, pause_condition):
-        self.TRIG_PIN = 12
-        self.ECHO_PIN = 13
-        GPIO.setup(self.TRIG_PIN, GPIO.OUT)
-        GPIO.setup(self.ECHO_PIN, GPIO.IN)
-        super().__init__('/home/jumiknows/Balloon4/Code/ULTRASONIC/sensor_readings.csv', pause_event, pause_condition)
+        try:
+            self.TRIG_PIN = 12
+            self.ECHO_PIN = 13
+            GPIO.setup(self.TRIG_PIN, GPIO.OUT)
+            GPIO.setup(self.ECHO_PIN, GPIO.IN)
+            super().__init__('/home/jumiknows/Balloon4/Code/ULTRASONIC/sensor_readings.csv', pause_event, pause_condition)
+            print("UltrasonicSensor initialized successfully.")
+        except ValueError as e:
+            print(f"Error initializing UltrasonicSensor: {e}")
+            self.sensor = None
 
     def csv_headers(self):
         return ['Timestamp', 'PingTravelTime', 'Distance (inches)']
@@ -30,4 +35,5 @@ class UltrasonicSensor(Sensor):
         dist_inch = dist_cm * 0.3937008
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
         pingTravelTime = pingTravelTime / 2
+        print(f"Ultrasonic - Timestamp: {timestamp}, PingTravelTime: {pingTravelTime}, Distance: {dist_inch:.1f} inches | {dist_cm:.1f} cm")
         return [timestamp, pingTravelTime, dist_inch]

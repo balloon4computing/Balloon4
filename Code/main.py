@@ -48,24 +48,21 @@ if __name__ == "__main__":
     pause_condition = threading.Condition()
 
     # Create sensor instances
-    temperature_sensor = TemperatureSensor(pause_event, pause_condition)
-    gyroscope_sensor = GyroscopeSensor(pause_event, pause_condition)
-    pressure_sensor = PressureSensor(pause_event, pause_condition)
-    geiger_counter = GeigerCounter(pause_event, pause_condition)
-    ultrasonic_sensor = UltrasonicSensor(pause_event, pause_condition)
-    gps_sensor = GPSSensor(pause_event, pause_condition)
+    sensors = []
+    sensors.append(TemperatureSensor(pause_event, pause_condition))
+    sensors.append(GyroscopeSensor(pause_event, pause_condition))
+    sensors.append(PressureSensor(pause_event, pause_condition))
+    sensors.append(GeigerCounter(pause_event, pause_condition))
+    sensors.append(UltrasonicSensor(pause_event, pause_condition))
+    sensors.append(GPSSensor(pause_event, pause_condition))
 
     print("Sensor instances created.")
 
+    # Filter out None sensors
+    sensors = [sensor for sensor in sensors if getattr(sensor, 'sensor', True)]
+
     # Create threads for each sensor
-    sensor_threads = [
-        threading.Thread(target=temperature_sensor.log_data),
-        threading.Thread(target=gyroscope_sensor.log_data),
-        threading.Thread(target=pressure_sensor.log_data),
-        threading.Thread(target=geiger_counter.log_data),
-        threading.Thread(target=ultrasonic_sensor.log_data),
-        threading.Thread(target=gps_sensor.log_data)
-    ]
+    sensor_threads = [threading.Thread(target=sensor.log_data) for sensor in sensors]
 
     # Start sensor threads
     for thread in sensor_threads:
