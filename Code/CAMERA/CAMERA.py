@@ -42,7 +42,7 @@ class CAMERA:
             fps (int): The frames per second rate of the video recording.
         """
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"video-{timestamp}.h264"
+        filename = f"/home/jumiknows/Balloon4/Code/CAMERA/video-{timestamp}.h264"
 
         command = [
             "libcamera-vid",
@@ -73,18 +73,20 @@ class CAMERA:
         width = width if width is not None else self.default_width
         height = height if height is not None else self.default_height
         fps = fps if fps is not None else self.default_fps
+        count = 0
+        cycle = 12
 
         try:
             while True:
+                if count > cycle:
+                    break
                 if mode == 'timelapse':
                     self.capture_timelapse(width, height, duration, interval, fps)
                 elif mode == 'video':
                     self.capture_video(width, height, duration, fps)
-                
+                    count = count + 1
                 if not loop:
                     break
                 time.sleep(sleep_time)  # Rest before starting the next session
         except KeyboardInterrupt:
             print("Stopped by User")
-
-
