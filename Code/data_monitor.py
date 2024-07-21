@@ -24,6 +24,11 @@ file_locks = {name: FileLock(path + ".lock") for name, path in file_paths.items(
 class DataMonitor:
     def __init__(self, rfm9x):
         self.rfm9x = rfm9x
+        self.rfm9x.tx_power = tx_power
+        self.rfm9x.spreading_factor = 10
+        self.rfm9x.signal_bandwidth = 125000
+        self.rfm9x.enable_crc = True
+        self.rfm9x.coding_rate = 8
         self.last_transmitted_data = {}
 
     def log_sent_data(self, data):

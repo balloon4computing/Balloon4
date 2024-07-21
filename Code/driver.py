@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
     # Initialize RFM9x (example)
     spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-    cs = DigitalInOut(board.CE1)
-    reset = DigitalInOut(board.D25)
+    cs = DigitalInOut(board.D23)
+    reset = DigitalInOut(board.D24)
     rfm9x = adafruit_rfm9x.RFM9x(spi, cs, reset, 915.0)
     
     # Initialize DataMonitor
