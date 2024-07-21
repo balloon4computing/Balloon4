@@ -35,7 +35,7 @@ if __name__ == "__main__":
     pause_event.set()  # Initially set the event to allow logging
     pause_condition = threading.Condition()
 
-    # Initialize RFM9x (example)
+    # Initialize RFM9x with the provided pin configuration
     spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
     cs = DigitalInOut(board.D23)
     reset = DigitalInOut(board.D24)
@@ -45,13 +45,14 @@ if __name__ == "__main__":
     monitor = DataMonitor(rfm9x)
 
     # Create sensor instances
-    sensors = []
-    sensors.append(TemperatureSensor(pause_event, pause_condition))
-    sensors.append(GyroscopeSensor(pause_event, pause_condition))
-    sensors.append(PressureSensor(pause_event, pause_condition))
-    sensors.append(GeigerCounter(pause_event, pause_condition))
-    sensors.append(UltrasonicSensor(pause_event, pause_condition))
-    sensors.append(GPSSensor(pause_event, pause_condition))
+    sensors = [
+        TemperatureSensor(pause_event, pause_condition),
+        GyroscopeSensor(pause_event, pause_condition),
+        PressureSensor(pause_event, pause_condition),
+        GeigerCounter(pause_event, pause_condition),
+        UltrasonicSensor(pause_event, pause_condition),
+        GPSSensor(pause_event, pause_condition)
+    ]
 
     print("Sensor instances created.")
 
