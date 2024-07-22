@@ -1,43 +1,31 @@
 import sys
 import threading
 import time
-
-# Ensure the current directory and its parent are in the sys.path
-sys.path.insert(0, '/home/jumiknows/Balloon4/Code')
-sys.path.insert(0, '/home/jumiknows/Balloon4')
-
-# Import sensor classes
-print("Importing sensor classes...")
+import board
+import busio
+from digitalio import DigitalInOut
+import adafruit_rfm9x
 from sensors.temperature_sensor import TemperatureSensor
 from sensors.gyroscope_sensor import GyroscopeSensor
 from sensors.pressure_sensor import PressureSensor
 from sensors.geiger_counter import GeigerCounter
 from sensors.ultrasonic_sensor import UltrasonicSensor
 from sensors.gps_sensor import GPSSensor
-from csv_reader import read_csv_files
+from data_monitor import DataMonitor
+
+# Ensure the current directory and its parent are in the sys.path
+sys.path.insert(0, '/home/jumiknows/Balloon4/Code')
+sys.path.insert(0, '/home/jumiknows/Balloon4')
 
 print("All classes imported successfully.")
 
-def spinner(pause_event, pause_condition, sensor_threads):
+def data_monitor_thread(data_monitor):
     try:
         while True:
-            time.sleep(10)  # Sleep before reading
-            with pause_condition:
-                pause_event.clear()  # Pause sensor threads
-                pause_condition.notify_all()
-                
-                # Wait for all sensor threads to acknowledge the pause
-                for thread in sensor_threads:
-                    if thread.is_alive():
-                        thread.join(timeout=1)
-            
-            read_csv_files()
-            
-            with pause_condition:
-                pause_event.set()  # Resume sensor threads
-                pause_condition.notify_all()
+            data_monitor.read_and_send_data()
+            time.sleep(10)
     except KeyboardInterrupt:
-        print("Spinner thread stopped by user.")
+        print("Data monitor thread stopped by user.")
 
 if __name__ == "__main__":
     print("Initializing sensors...")
@@ -47,14 +35,24 @@ if __name__ == "__main__":
     pause_event.set()  # Initially set the event to allow logging
     pause_condition = threading.Condition()
 
+    # Initialize RFM9x with the provided pin configuration
+    spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+    cs = DigitalInOut(board.D23)
+    reset = DigitalInOut(board.D24)
+    rfm9x = adafruit_rfm9x.RFM9x(spi, cs, reset, 915.0)
+    
+    # Initialize DataMonitor
+    monitor = DataMonitor(rfm9x)
+
     # Create sensor instances
-    sensors = []
-    sensors.append(TemperatureSensor(pause_event, pause_condition))
-    sensors.append(GyroscopeSensor(pause_event, pause_condition))
-    sensors.append(PressureSensor(pause_event, pause_condition))
-    sensors.append(GeigerCounter(pause_event, pause_condition))
-    sensors.append(UltrasonicSensor(pause_event, pause_condition))
-    sensors.append(GPSSensor(pause_event, pause_condition))
+    sensors = [
+        TemperatureSensor(pause_event, pause_condition),
+        GyroscopeSensor(pause_event, pause_condition),
+        PressureSensor(pause_event, pause_condition),
+        GeigerCounter(pause_event, pause_condition),
+        UltrasonicSensor(pause_event, pause_condition),
+        GPSSensor(pause_event, pause_condition)
+    ]
 
     print("Sensor instances created.")
 
@@ -70,16 +68,16 @@ if __name__ == "__main__":
 
     print("All sensor threads started.")
 
-    # Create and start a spinner thread for pausing/resuming and reading CSV files
-    spinner_thread = threading.Thread(target=spinner, args=(pause_event, pause_condition, sensor_threads))
-    spinner_thread.start()
+    # Create and start a data monitor thread
+    monitor_thread = threading.Thread(target=data_monitor_thread, args=(monitor,))
+    monitor_thread.start()
 
-    print("Spinner thread started.")
+    print("Data monitor thread started.")
     
     try:
         for thread in sensor_threads:
             thread.join()
-        spinner_thread.join()
+        monitor_thread.join()
     except KeyboardInterrupt:
         print("Logging stopped by user.")
     finally:

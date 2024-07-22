@@ -21,7 +21,7 @@ file_paths = {
 file_locks = {name: FileLock(path + ".lock") for name, path in file_paths.items()}
 
 class DataMonitor:
-    def __init__(self, rfm9x):
+    def __init__(self, rfm9x, tx_power=23):
         self.rfm9x = rfm9x
         self.rfm9x.tx_power = tx_power
         self.rfm9x.spreading_factor = 10

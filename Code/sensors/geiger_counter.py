@@ -24,11 +24,11 @@ class GeigerCounter(Sensor):
 
     def read_sensor_data(self):
         startTime = time.time()
-        while time.time() - startTime <= 60:
+        while time.time() - startTime <= 1:
             pass
         currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        cpm = self.tubeCounts
+        cps = self.tubeCounts
         usvh = self.tubeCounts * 60 * self.usvh_ratio
         self.tubeCounts = 0
-        print(f"GeigerCounter - Timestamp: {currentTime}, CPM: {cpm}, uSv/h: {usvh}")
-        return [currentTime, cpm, usvh]
+        print(f"GeigerCounter - Timestamp: {currentTime}, CPS: {cps}, uSv/h: {usvh}")
+        return [currentTime, cps, usvh]
