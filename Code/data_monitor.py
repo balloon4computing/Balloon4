@@ -32,11 +32,11 @@ class DataMonitor:
 
     def read_and_send_data(self):
         identifier_map = {
-            'temperature': (0x03, "=if"),
-            'sensor': (0x05, "=i9f"),
-            'pressure': (0x01, "=ifff"),
+            'temperature': (0x03, "=ie"),
+            'sensor': (0x05, "=i9e"),
+            'pressure': (0x01, "=ifee"),
             'geiger': (0x02, "=iH"),
-            'ultrasonic': (0x04, "=iff"),
+            'ultrasonic': (0x04, "=if"),
             'gps': (0x00, "=iffi")
         }
 
@@ -99,7 +99,7 @@ class DataMonitor:
             elif identifier == 0x02:  # Geiger Counter
                 values = [int(float(row[0]))]
             elif identifier == 0x04:  # Ultrasonic Sensor
-                values = [float(row[i]) for i in range(2)]
+                values = [float(row[i]) for i in range(1)]
             elif identifier == 0x00:  # GPS Sensor
                 if 'No fix' in row:
                     raise ValueError("Invalid GPS data")
