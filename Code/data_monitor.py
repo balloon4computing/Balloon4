@@ -29,86 +29,104 @@ class DataMonitor:
         self.rfm9x.signal_bandwidth = 125000
         self.rfm9x.enable_crc = True
         self.rfm9x.coding_rate = 8
-        self.last_transmitted_data = {}
 
     def read_and_send_data(self):
         identifier_map = {
-            'temperature': (0x03, "=ie", self.unpack_temperature),
-            'sensor': (0x05, "=i9e", self.unpack_sensor),
-            'pressure': (0x01, "=ifee", self.unpack_pressure),
-            'geiger': (0x02, "=iH", self.unpack_geiger),
-            'ultrasonic': (0x04, "=if", self.unpack_ultrasonic),
-            'gps': (0x00, "=iffi", self.unpack_gps)
+            'temperature': (0x03, "=if"),
+            'sensor': (0x05, "=i9f"),
+            'pressure': (0x01, "=ifff"),
+            'geiger': (0x02, "=if"),
+            'ultrasonic': (0x04, "=iff"),
+            'gps': (0x00, "=iffi")
         }
 
         for name, file_path in file_paths.items():
+            if not os.path.exists(file_path):
+                continue
+
             file_lock = file_locks[name]
-            identifier, struct_format, unpack_func = identifier_map[name]
+            identifier, struct_format = identifier_map[name]
 
             try:
-                if not os.path.exists(file_path):
-                    continue
-                
-                try:
-                    with file_lock.acquire(timeout=1):
-                        with open(file_path, mode='r', newline='') as file:
-                            reader = csv.reader((line.replace('\0', '') for line in file))
-                            next(reader, None)  # Skip header
-                            
-                            last_row = None
-                            for row in reader:
-                                last_row = row
-                            
-                            if last_row:
-                                try:
-                                    timestamp = int(time.time())
-                                    data = self.pack_data(identifier, struct_format, timestamp, last_row)
-                                    self.rfm9x.send(data)
-                                    print("Sent data:")
-                                    unpack_func(data)
-                                    print("Corresponding row in the CSV file:")
-                                    print(last_row)
-                                except Exception as e:
-                                    print(f"Exception occurred while processing row {last_row}: {e}")
-                except Timeout:
-                    print(f"Could not acquire lock for {file_path}. Skipping.")
+                with file_lock.acquire(timeout=1):
+                    second_last_row = self.get_second_last_row(file_path)
+                    if second_last_row:
+                        try:
+                            timestamp = self.convert_timestamp_to_id(second_last_row[0])  # Convert timestamp to unique ID
+                            data = self.pack_data(identifier, struct_format, timestamp, second_last_row[1:])  # Skip timestamp
+                            self.rfm9x.send(data)
+                            print("Sent data:", self.unpack_data(struct_format, data))
+                            print("Corresponding row in the CSV file:", second_last_row)
+                        except Exception as e:
+                            print(f"Exception occurred while processing row {second_last_row}: {e}")
+            except Timeout:
+                print(f"Could not acquire lock for {file_path}. Skipping.")
             except Exception as e:
                 print(f"Exception occurred while reading {file_path}: {e}")
 
+    def get_second_last_row(self, file_path):
+        try:
+            with open(file_path, mode='r', newline='') as file:
+                reader = csv.reader((line.replace('\0', '') for line in file))
+                next(reader, None)  # Skip header
+
+                second_last_row = None
+                last_row = None
+                for row in reader:
+                    second_last_row = last_row
+                    last_row = row
+
+                return second_last_row
+        except Exception as e:
+            print(f"Exception occurred while reading {file_path}: {e}")
+            return None
+
+    def convert_timestamp_to_id(self, timestamp_str):
+        # Convert the timestamp string to a unique integer identifier
+        struct_time = time.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+        return int(time.mktime(struct_time))
+
     def pack_data(self, identifier, struct_format, timestamp, row):
-        if identifier == 0x03:  # Temperature Inside
-            return struct.pack("=" + struct_format, timestamp, float(row[1]))
-        elif identifier == 0x05:  # BNO085 Sensor
-            return struct.pack("=" + struct_format, timestamp, *map(float, row[1:10]))
-        elif identifier == 0x01:  # BME680 Sensor
-            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]), float(row[3]))
-        elif identifier == 0x02:  # Geiger Counter
-            return struct.pack("=" + struct_format, timestamp, int(row[1]))
-        elif identifier == 0x04:  # Ultrasonic Sensor
-            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]))
-        elif identifier == 0x00:  # GPS Sensor
-            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]), int(float(row[3])))
+        print(f"Packing data for identifier {identifier} with format {struct_format}")
+        print(f"Row data (excluding timestamp): {row}")
+        try:
+            if identifier == 0x03:  # Temperature Inside
+                values = [float(row[0])]
+            elif identifier == 0x05:  # BNO085 Sensor
+                values = [float(row[i]) for i in range(9)]
+            elif identifier == 0x01:  # BME680 Sensor
+                values = [float(row[i]) for i in range(3)]
+            elif identifier == 0x02:  # Geiger Counter
+                values = [int(float(row[0]))]
+            elif identifier == 0x04:  # Ultrasonic Sensor
+                values = [float(row[i]) for i in range(2)]
+            elif identifier == 0x00:  # GPS Sensor
+                if 'No fix' in row:
+                    raise ValueError("Invalid GPS data")
+                values = [float(row[i]) for i in range(2)] + [int(float(row[2]))]
+            else:
+                raise ValueError("Unknown identifier")
 
-    def unpack_temperature(self, data):
-        unpacked_data = struct.unpack("=ie", data[1:])
-        print("Temperature:", unpacked_data)
+            packed_data = struct.pack(struct_format, timestamp, *values)
+            return packed_data
+        except Exception as e:
+            print(f"Error packing data: {e}")
+            raise
 
-    def unpack_sensor(self, data):
-        unpacked_data = struct.unpack("=i9e", data[1:])
-        print("Gyroscope:", unpacked_data)
+    def unpack_data(self, struct_format, data):
+        unpacked_data = struct.unpack(struct_format, data)
+        return unpacked_data
 
-    def unpack_pressure(self, data):
-        unpacked_data = struct.unpack("=ifee", data[1:])
-        print("Pressure:", unpacked_data)
+# Example usage
+if __name__ == "__main__":
+    # Initialize RFM9x with the provided pin configuration
+    spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+    cs = DigitalInOut(board.D23)
+    reset = DigitalInOut(board.D24)
+    rfm9x = adafruit_rfm9x.RFM9x(spi, cs, reset, 915.0)
 
-    def unpack_geiger(self, data):
-        unpacked_data = struct.unpack("=iH", data[1:])
-        print("Geiger:", unpacked_data)
+    # Initialize DataMonitor
+    monitor = DataMonitor(rfm9x, tx_power=23)
 
-    def unpack_ultrasonic(self, data):
-        unpacked_data = struct.unpack("=if", data[1:])
-        print("Ultrasonic:", unpacked_data)
-
-    def unpack_gps(self, data):
-        unpacked_data = struct.unpack("=iffi", data[1:])
-        print("GPS:", unpacked_data)
+    # Read and send data
+    monitor.read_and_send_data()
