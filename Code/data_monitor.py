@@ -1,6 +1,7 @@
 import os
 import csv
 import struct
+import time
 from filelock import FileLock, Timeout
 import board
 import busio
@@ -32,12 +33,12 @@ class DataMonitor:
 
     def read_and_send_data(self):
         identifier_map = {
-            'temperature': (0x03, "=Bie", self.unpack_temperature),
-            'sensor': (0x05, "=Bi9e", self.unpack_sensor),
-            'pressure': (0x01, "=Bifee", self.unpack_pressure),
-            'geiger': (0x02, "=BiH", self.unpack_geiger),
-            'ultrasonic': (0x04, "=Bif", self.unpack_ultrasonic),
-            'gps': (0x00, "=Biffi", self.unpack_gps)
+            'temperature': (0x03, "=ie", self.unpack_temperature),
+            'sensor': (0x05, "=i9e", self.unpack_sensor),
+            'pressure': (0x01, "=ifee", self.unpack_pressure),
+            'geiger': (0x02, "=iH", self.unpack_geiger),
+            'ultrasonic': (0x04, "=if", self.unpack_ultrasonic),
+            'gps': (0x00, "=iffi", self.unpack_gps)
         }
 
         for name, file_path in file_paths.items():
@@ -54,40 +55,39 @@ class DataMonitor:
                             reader = csv.reader((line.replace('\0', '') for line in file))
                             next(reader, None)  # Skip header
                             
-                            last_data = self.last_transmitted_data.get(file_path, None)
-                            new_data_rows = [row for row in reader if not (last_data and row[1:] == last_data[1:])]
+                            last_row = None
+                            for row in reader:
+                                last_row = row
                             
-                            if new_data_rows:
-                                self.last_transmitted_data[file_path] = new_data_rows[-1]
-                                for row in new_data_rows:
-                                    try:
-                                        timestamp = int(row[0].split(' ')[1].replace(':', ''))
-                                        data = self.pack_data(identifier, struct_format, timestamp, row)
-                                        self.rfm9x.send(data)
-                                        print("Sent data:")
-                                        unpack_func(data)
-                                        print("Corresponding row in the CSV file:")
-                                        print(row)
-                                    except Exception as e:
-                                        print(f"Exception occurred while processing row {row}: {e}")
+                            if last_row:
+                                try:
+                                    timestamp = int(time.time())
+                                    data = self.pack_data(identifier, struct_format, timestamp, last_row)
+                                    self.rfm9x.send(data)
+                                    print("Sent data:")
+                                    unpack_func(data)
+                                    print("Corresponding row in the CSV file:")
+                                    print(last_row)
+                                except Exception as e:
+                                    print(f"Exception occurred while processing row {last_row}: {e}")
                 except Timeout:
                     print(f"Could not acquire lock for {file_path}. Skipping.")
             except Exception as e:
                 print(f"Exception occurred while reading {file_path}: {e}")
 
     def pack_data(self, identifier, struct_format, timestamp, row):
-        if identifier == 0x03:
-            return struct.pack(struct_format, identifier, timestamp, float(row[1]))
-        elif identifier == 0x05:
-            return struct.pack(struct_format, identifier, timestamp, *map(float, row[1:10]))
-        elif identifier == 0x01:
-            return struct.pack(struct_format, identifier, timestamp, float(row[1]), float(row[2]), float(row[3]))
-        elif identifier == 0x02:
-            return struct.pack(struct_format, identifier, timestamp, int(row[1]))
-        elif identifier == 0x04:
-            return struct.pack(struct_format, identifier, timestamp, float(row[1]), float(row[2]))
-        elif identifier == 0x00:
-            return struct.pack(struct_format, identifier, timestamp, float(row[1]), float(row[2]), int(row[3]))
+        if identifier == 0x03:  # Temperature Inside
+            return struct.pack("=" + struct_format, timestamp, float(row[1]))
+        elif identifier == 0x05:  # BNO085 Sensor
+            return struct.pack("=" + struct_format, timestamp, *map(float, row[1:10]))
+        elif identifier == 0x01:  # BME680 Sensor
+            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]), float(row[3]))
+        elif identifier == 0x02:  # Geiger Counter
+            return struct.pack("=" + struct_format, timestamp, int(row[1]))
+        elif identifier == 0x04:  # Ultrasonic Sensor
+            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]))
+        elif identifier == 0x00:  # GPS Sensor
+            return struct.pack("=" + struct_format, timestamp, float(row[1]), float(row[2]), int(float(row[3])))
 
     def unpack_temperature(self, data):
         unpacked_data = struct.unpack("=ie", data[1:])
