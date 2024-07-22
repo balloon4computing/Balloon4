@@ -35,7 +35,7 @@ class DataMonitor:
             'temperature': (0x03, "=if"),
             'sensor': (0x05, "=i9f"),
             'pressure': (0x01, "=ifff"),
-            'geiger': (0x02, "=if"),
+            'geiger': (0x02, "=iH"),
             'ultrasonic': (0x04, "=iff"),
             'gps': (0x00, "=iffi")
         }
@@ -88,7 +88,7 @@ class DataMonitor:
 
     def pack_data(self, identifier, struct_format, timestamp, row):
         print(f"Packing data for identifier {identifier} with format {struct_format}")
-        print(f"Row data (excluding timestamp): {row}")
+        print(f"Row data: {row}")
         try:
             if identifier == 0x03:  # Temperature Inside
                 values = [float(row[0])]
@@ -103,7 +103,7 @@ class DataMonitor:
             elif identifier == 0x00:  # GPS Sensor
                 if 'No fix' in row:
                     raise ValueError("Invalid GPS data")
-                values = [float(row[i]) for i in range(2)] + [int(float(row[2]))]
+                values = [float(row[i]) for i in range(2)] + [int(round(float(row[2])))]
             else:
                 raise ValueError("Unknown identifier")
 
