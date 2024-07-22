@@ -20,7 +20,7 @@ class GeigerCounter(Sensor):
         self.tubeCounts += 1
 
     def csv_headers(self):
-        return ["Time", "CPM", "uSv/h"]
+        return ["Time", "CPS", "uSv/h"]
 
     def read_sensor_data(self):
         startTime = time.time()
