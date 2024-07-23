@@ -37,7 +37,7 @@ class DataMonitor:
             'pressure': (0x01, "=ifee"),
             'geiger': (0x02, "=iH"),
             'ultrasonic': (0x04, "=if"),
-            'gps': (0x00, "=iffi")
+            'gps': (0x00, "=iffei")
         }
 
         for name, file_path in file_paths.items():
@@ -53,9 +53,12 @@ class DataMonitor:
                     if second_last_row:
                         try:
                             timestamp = self.convert_timestamp_to_id(second_last_row[0])  # Convert timestamp to unique ID
-                            data = self.pack_data(identifier, struct_format, timestamp, second_last_row[1:])  # Skip timestamp
+                            packed_data = self.pack_data(identifier, struct_format, timestamp, second_last_row[1:])  # Skip timestamp
+                            identifier_byte = bytes([identifier])  # Convert identifier to byte string
+                            data = identifier_byte + packed_data
                             self.rfm9x.send(data)
-                            print("Sent data:", self.unpack_data(struct_format, data))
+                            print("Identifier:", identifier, "Data:", self.unpack_data(struct_format, data))
+                            print("Raw data:", data)
                             print("Corresponding row in the CSV file:", second_last_row)
                         except Exception as e:
                             print(f"Exception occurred while processing row {second_last_row}: {e}")
@@ -95,15 +98,16 @@ class DataMonitor:
             elif identifier == 0x05:  # BNO085 Sensor
                 values = [float(row[i]) for i in range(9)]
             elif identifier == 0x01:  # BME680 Sensor
-                values = [float(row[i]) for i in range(3)]
+                # BME680 .csv is in a different order than the payload format
+                values = [float(row[i]) for i in range(1,3)] + [float(row[0])]
             elif identifier == 0x02:  # Geiger Counter
                 values = [int(float(row[0]))]
             elif identifier == 0x04:  # Ultrasonic Sensor
-                values = [float(row[i]) for i in range(1)]
+                values = [float(row[0])]
             elif identifier == 0x00:  # GPS Sensor
                 if 'No fix' in row:
                     raise ValueError("Invalid GPS data")
-                values = [float(row[i]) for i in range(2)] + [int(round(float(row[2])))]
+                values = [float(row[i]) for i in range(3)] + [int(round(float(row[3])))]
             else:
                 raise ValueError("Unknown identifier")
 
@@ -114,7 +118,7 @@ class DataMonitor:
             raise
 
     def unpack_data(self, struct_format, data):
-        unpacked_data = struct.unpack(struct_format, data)
+        unpacked_data = struct.unpack_from(struct_format, data, 1)
         return unpacked_data
 
 # Example usage
